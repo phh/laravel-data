@@ -47,7 +47,7 @@ class DataCollectionTransformer
             : $items;
 
         $items = $this->transformationType->useTransformers()
-            ? array_map(fn(Data $data) => $data->transform($this->transformationType), $items)
+            ? array_map(fn (Data $data) => $data->transform($this->transformationType), $items)
             : $items;
 
         return $this->wrapKey === null
