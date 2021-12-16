@@ -10,14 +10,20 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Tests\Fakes\DefaultLazyData;
 use Spatie\LaravelData\Tests\Fakes\LazyData;
+use Spatie\LaravelData\Tests\Fakes\NestedCollectionData;
 use Spatie\LaravelData\Tests\Fakes\SimpleData;
 
 class DataCollectionTest extends TestCase
 {
+    public function setUp() : void
+    {
+        parent::setUp();
+    }
+
     /** @test */
     public function it_can_get_a_paginated_data_collection()
     {
-        $items = Collection::times(100, fn (int $index) => "Item {$index}");
+        $items = Collection::times(100, fn(int $index) => "Item {$index}");
 
         $paginator = new LengthAwarePaginator(
             $items->forPage(1, 15),
@@ -49,7 +55,7 @@ class DataCollectionTest extends TestCase
     {
         $collection = SimpleData::collection(['A', 'B']);
 
-        $filtered = $collection->filter(fn (SimpleData $data) => $data->string === 'A')->toArray();
+        $filtered = $collection->filter(fn(SimpleData $data) => $data->string === 'A')->toArray();
 
         $this->assertEquals([
             ['string' => 'A'],
@@ -63,7 +69,7 @@ class DataCollectionTest extends TestCase
             new LengthAwarePaginator(['A', 'B'], 2, 15)
         );
 
-        $filtered = $collection->filter(fn (SimpleData $data) => $data->string === 'A')->toArray();
+        $filtered = $collection->filter(fn(SimpleData $data) => $data->string === 'A')->toArray();
 
         $this->assertEquals([
             ['string' => 'A'],
@@ -76,7 +82,7 @@ class DataCollectionTest extends TestCase
     {
         $collection = SimpleData::collection(['A', 'B']);
 
-        $filtered = $collection->through(fn (SimpleData $data) => new SimpleData("{$data->string}x"))->toArray();
+        $filtered = $collection->through(fn(SimpleData $data) => new SimpleData("{$data->string}x"))->toArray();
 
         $this->assertEquals([
             ['string' => 'Ax'],
@@ -91,7 +97,7 @@ class DataCollectionTest extends TestCase
             new LengthAwarePaginator(['A', 'B'], 2, 15)
         );
 
-        $filtered = $collection->through(fn (SimpleData $data) => new SimpleData("{$data->string}x"))->toArray();
+        $filtered = $collection->through(fn(SimpleData $data) => new SimpleData("{$data->string}x"))->toArray();
 
         $this->assertEquals([
             ['string' => 'Ax'],
@@ -156,25 +162,25 @@ class DataCollectionTest extends TestCase
     public function arrayAccessCollections(): Generator
     {
         yield "array" => [
-            fn () => SimpleData::collection([
+            fn() => SimpleData::collection([
                 'A', 'B', SimpleData::from('C'), SimpleData::from('D'),
             ]),
         ];
 
         yield "collection" => [
-            fn () => SimpleData::collection([
+            fn() => SimpleData::collection([
                 'A', 'B', SimpleData::from('C'), SimpleData::from('D'),
             ]),
         ];
 
         yield "paginator" => [
-            fn () => SimpleData::collection(new LengthAwarePaginator([
+            fn() => SimpleData::collection(new LengthAwarePaginator([
                 'A', 'B', SimpleData::from('C'), SimpleData::from('D'),
             ], 4, 15)),
         ];
 
         yield "cursor paginator" => [
-            fn () => SimpleData::collection(new CursorPaginator([
+            fn() => SimpleData::collection(new CursorPaginator([
                 'A', 'B', SimpleData::from('C'), SimpleData::from('D'),
             ], 4)),
         ];
@@ -193,7 +199,7 @@ class DataCollectionTest extends TestCase
             [],
             [],
             [],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
 
         $this->assertEquals(
             [
@@ -201,7 +207,7 @@ class DataCollectionTest extends TestCase
                 ['name' => 'Freek'],
                 ['name' => 'Brent'],
             ],
-            $includedResponse->getData(true)
+            $includedResponse->getData(true)['data']
         );
     }
 
@@ -218,7 +224,7 @@ class DataCollectionTest extends TestCase
             [],
             [],
             [],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
 
         LazyData::$allowedIncludes = ['name'];
 
@@ -230,7 +236,7 @@ class DataCollectionTest extends TestCase
             ['name' => 'Ruben'],
             ['name' => 'Freek'],
             ['name' => 'Brent'],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
 
         LazyData::$allowedIncludes = null;
 
@@ -242,7 +248,7 @@ class DataCollectionTest extends TestCase
             ['name' => 'Ruben'],
             ['name' => 'Freek'],
             ['name' => 'Brent'],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
     }
 
     /** @test */
@@ -260,14 +266,14 @@ class DataCollectionTest extends TestCase
                 ['name' => 'Freek'],
                 ['name' => 'Brent'],
             ],
-            $response->getData(true)
+            $response->getData(true)['data']
         );
 
         $this->assertEquals([
             [],
             [],
             [],
-        ], $excludedResponse->getData(true));
+        ], $excludedResponse->getData(true)['data']);
     }
 
     /** @test */
@@ -283,7 +289,7 @@ class DataCollectionTest extends TestCase
             ['name' => 'Ruben'],
             ['name' => 'Freek'],
             ['name' => 'Brent'],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
 
         DefaultLazyData::$allowedExcludes = ['name'];
 
@@ -295,7 +301,7 @@ class DataCollectionTest extends TestCase
             [],
             [],
             [],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
 
         DefaultLazyData::$allowedExcludes = null;
 
@@ -307,7 +313,7 @@ class DataCollectionTest extends TestCase
             [],
             [],
             [],
-        ], $response->getData(true));
+        ], $response->getData(true)['data']);
     }
 
     /** @test */
@@ -352,5 +358,119 @@ class DataCollectionTest extends TestCase
             ]),
             SimpleData::collection(['A', 'B', 'C'])->toCollection()
         );
+    }
+
+    /** @test */
+    public function it_will_wrap_a_collection_in_a_key_when_returning_as_response()
+    {
+        $collectionResponse = SimpleData::collection(['A', 'B', 'C'])
+            ->toResponse(request())
+            ->getData(true);
+
+        $this->assertEquals([
+            'data' => [
+                ['string' => 'A'],
+                ['string' => 'B'],
+                ['string' => 'C'],
+            ],
+        ], $collectionResponse);
+
+        $paginatedCollectionResponse = SimpleData::collection(new LengthAwarePaginator(['A', 'B', 'C'], 3, 15))
+            ->toResponse(request())
+            ->getData(true);
+
+        $this->assertEquals([
+            'data' => [
+                ['string' => 'A'],
+                ['string' => 'B'],
+                ['string' => 'C'],
+            ],
+            "meta" => [
+                "current_page" => 1,
+                "first_page_url" => "/?page=1",
+                "from" => 1,
+                "last_page" => 1,
+                "last_page_url" => "/?page=1",
+                "next_page_url" => null,
+                "path" => "/",
+                "per_page" => 15,
+                "prev_page_url" => null,
+                "to" => 3,
+                "total" => 3,
+            ],
+        ], $paginatedCollectionResponse);
+    }
+
+    /** @test */
+    public function it_can_change_the_wrap_key_when_returning_as_response()
+    {
+        $collectionResponse = SimpleData::collection(['A', 'B', 'C'])
+            ->wrapKey('yolo')
+            ->toResponse(request())
+            ->getData(true);
+
+        $this->assertEquals([
+            'yolo' => [
+                ['string' => 'A'],
+                ['string' => 'B'],
+                ['string' => 'C'],
+            ],
+        ], $collectionResponse);
+
+        $paginatedCollectionResponse = SimpleData::collection(new LengthAwarePaginator(['A', 'B', 'C'], 3, 15))
+            ->wrapKey('yolo')
+            ->toResponse(request())
+            ->getData(true);
+
+        $this->assertEquals([
+            'yolo' => [
+                ['string' => 'A'],
+                ['string' => 'B'],
+                ['string' => 'C'],
+            ],
+            "meta" => [
+                "current_page" => 1,
+                "first_page_url" => "/?page=1",
+                "from" => 1,
+                "last_page" => 1,
+                "last_page_url" => "/?page=1",
+                "next_page_url" => null,
+                "path" => "/",
+                "per_page" => 15,
+                "prev_page_url" => null,
+                "to" => 3,
+                "total" => 3,
+            ],
+        ], $paginatedCollectionResponse);
+    }
+
+    /** @test */
+    public function it_will_only_wrap_root_collections_in_a_key_when_returning_as_a_response()
+    {
+        $collection = NestedCollectionData::collection([
+            NestedCollectionData::from(['items' => ['A', 'B']]),
+            ['items' => ['C', 'D']],
+        ]);
+
+        $responseData = $collection
+            ->toResponse(request())
+            ->getData(true);
+
+        $this->assertEquals([
+            'data' => [
+                [
+                    'items' => [
+                        ['string' => 'A'],
+                        ['string' => 'B'],
+                    ],
+                ],
+                [
+                    'items' => [
+                        ['string' => 'C'],
+                        ['string' => 'D'],
+                    ],
+                ],
+            ],
+        ], $responseData);
     }
 }

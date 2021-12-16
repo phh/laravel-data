@@ -16,9 +16,10 @@ class DataCollectionTransformer
         protected TransformationType $transformationType,
         protected array $inclusionTree,
         protected array $exclusionTree,
-        protected array | CursorPaginator | Paginator  $items,
+        protected array|CursorPaginator|Paginator $items,
         protected ?Closure $through,
         protected ?Closure $filter,
+        protected ?string $wrapKey,
     ) {
     }
 
@@ -45,9 +46,13 @@ class DataCollectionTransformer
             ? array_values(array_filter($items, $this->filter))
             : $items;
 
-        return $this->transformationType->useTransformers()
-            ? array_map(fn (Data $data) => $data->transform($this->transformationType), $items)
+        $items = $this->transformationType->useTransformers()
+            ? array_map(fn(Data $data) => $data->transform($this->transformationType), $items)
             : $items;
+
+        return $this->wrapKey === null
+            ? $items
+            : [$this->wrapKey => $items];
     }
 
     protected function transformItemClosure(): Closure
@@ -66,7 +71,7 @@ class DataCollectionTransformer
     protected function wrapPaginatedArray(array $paginated): array
     {
         return [
-            'data' => $paginated['data'],
+            $this->wrapKey ?? 'data' => $paginated['data'],
             'meta' => Arr::except($paginated, [
                 'data',
                 'links',

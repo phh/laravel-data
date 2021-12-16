@@ -31,11 +31,13 @@ class DataCollection implements Responsable, Arrayable, Jsonable, IteratorAggreg
 
     private ?Closure $filter = null;
 
-    private array | CursorPaginator | Paginator $items;
+    private array|CursorPaginator|Paginator $items;
+
+    private ?string $wrapKey = null;
 
     public function __construct(
         private string $dataClass,
-        Collection | array | CursorPaginator | Paginator $items
+        Collection|array|CursorPaginator|Paginator $items
     ) {
         $this->items = $items instanceof Collection ? $items->all() : $items;
 
@@ -56,12 +58,12 @@ class DataCollection implements Responsable, Arrayable, Jsonable, IteratorAggreg
         return $this;
     }
 
-    public function items(): array | CursorPaginator | Paginator
+    public function items(): array|CursorPaginator|Paginator
     {
         return $this->items;
     }
 
-    public function transform(TransformationType $type): array
+    public function transform(TransformationType $type, ?string $wrapKey = null): array
     {
         $transformer = new DataCollectionTransformer(
             $this->dataClass,
@@ -70,7 +72,8 @@ class DataCollection implements Responsable, Arrayable, Jsonable, IteratorAggreg
             $this->getExclusionTree(),
             $this->items,
             $this->through,
-            $this->filter
+            $this->filter,
+            $this->wrapKey ?? $wrapKey,
         );
 
         return $transformer->transform();
@@ -94,6 +97,13 @@ class DataCollection implements Responsable, Arrayable, Jsonable, IteratorAggreg
     public function toCollection(): Collection
     {
         return new Collection($this->items);
+    }
+
+    public function wrapKey(string $key): static
+    {
+        $this->wrapKey = $key;
+
+        return $this;
     }
 
     public function getIterator(): ArrayIterator
@@ -168,7 +178,7 @@ class DataCollection implements Responsable, Arrayable, Jsonable, IteratorAggreg
 
     protected function ensureAllItemsAreData()
     {
-        $closure = fn ($item) => $item instanceof Data ? $item : $this->dataClass::from($item);
+        $closure = fn($item) => $item instanceof Data ? $item : $this->dataClass::from($item);
 
         $this->items = $this->isPaginated()
             ? $this->items->through($closure)
