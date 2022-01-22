@@ -51,7 +51,7 @@ class DataTransformer
                 $name = $property->name();
 
                 if ($this->shouldIncludeProperty($name, $data->{$name}, $inclusionTree, $exclusionTree, $allowedIncludes, $allowedExcludes)) {
-                    $payload[$name] = $this->resolvePropertyValue(
+                    $payload[$property->resolveMapToAttribute()] = $this->resolvePropertyValue(
                         $property,
                         $data->{$name},
                         $inclusionTree[$name] ?? [],

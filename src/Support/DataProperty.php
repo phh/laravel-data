@@ -7,6 +7,8 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\MapFrom;
+use Spatie\LaravelData\Attributes\MapTo;
 use Spatie\LaravelData\Attributes\Validation\ValidationAttribute;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
@@ -33,6 +35,10 @@ class DataProperty
 
     /** @var \Spatie\LaravelData\Attributes\Validation\ValidationAttribute[] */
     protected array $validationAttributes;
+
+    protected ?MapFrom $mapFromAttribute;
+
+    protected ?MapTo $mapToAttribute;
 
     protected ?WithCast $castAttribute;
 
@@ -110,6 +116,28 @@ class DataProperty
         return $this->property->getName();
     }
 
+    public function resolveMapFromAttribute(): string
+    {
+        $attribute = $this->mapFromAttribute();
+
+        if (! is_null($attribute)) {
+            return $attribute->name;
+        }
+
+        return $this->name();
+    }
+
+    public function resolveMapToAttribute(): string
+    {
+        $attribute = $this->mapToAttribute();
+
+        if (! is_null($attribute)) {
+            return $attribute->name;
+        }
+
+        return $this->name();
+    }
+
     public function className(): string
     {
         return $this->property->getDeclaringClass()->getName();
@@ -123,6 +151,24 @@ class DataProperty
         }
 
         return $this->validationAttributes;
+    }
+
+    public function mapFromAttribute(): ?MapFrom
+    {
+        if (! isset($this->mapFromAttribute)) {
+            $this->loadAttributes();
+        }
+
+        return $this->mapFromAttribute;
+    }
+
+    public function mapToAttribute(): ?MapTo
+    {
+        if (! isset($this->mapToAttribute)) {
+            $this->loadAttributes();
+        }
+
+        return $this->mapToAttribute;
     }
 
     public function castAttribute(): ?WithCast
@@ -277,6 +323,18 @@ class DataProperty
                 continue;
             }
 
+            if ($initiatedAttribute instanceof MapFrom) {
+                $this->mapFromAttribute = $initiatedAttribute;
+
+                continue;
+            }
+
+            if ($initiatedAttribute instanceof MapTo) {
+                $this->mapToAttribute = $initiatedAttribute;
+
+                continue;
+            }
+
             if ($initiatedAttribute instanceof WithCast) {
                 $this->castAttribute = $initiatedAttribute;
 
@@ -297,6 +355,14 @@ class DataProperty
         }
 
         $this->validationAttributes = $validationAttributes;
+
+        if (! isset($this->mapFromAttribute)) {
+            $this->mapFromAttribute = null;
+        }
+
+        if (! isset($this->mapToAttribute)) {
+            $this->mapToAttribute = null;
+        }
 
         if (! isset($this->castAttribute)) {
             $this->castAttribute = null;

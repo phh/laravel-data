@@ -41,7 +41,7 @@ class DataFromArrayResolver
 
     private function resolveValue(DataProperty $property, array $values): mixed
     {
-        $value = $values[$property->name()] ?? null;
+        $value = $values[$property->resolveMapFromAttribute()] ?? null;
 
         if ($value === null) {
             return $value;
